@@ -1,5 +1,6 @@
 import { useState } from "react";
 import FormPage from "./pages/FormPage";
+import CalendarPage from "./pages/CalendarPage";
 
 function App() {
   const [orders, setOrders] = useState([]);
@@ -12,7 +13,9 @@ function App() {
 
   return (
     <>
-      {!showCalendar && (
+      {showCalendar ? (
+        <CalendarPage orders={orders} />
+      ) : (
         <FormPage onSubmit={handleAddOrder} />
       )}
     </>
