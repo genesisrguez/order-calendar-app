@@ -1,0 +1,87 @@
+/* RESET SIMPLE */
+body {
+  margin: 0;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.calendar-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px 60px;
+  background-color: #f4f6f9;
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+
+/* BOTÓN */
+.back-button {
+  background-color: #1f2937;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.back-button:hover {
+  background-color: #111827;
+}
+
+/* FECHA */
+.calendar-date {
+  margin-bottom: 30px;
+  color: #1f2937;
+}
+
+/* CONTENEDOR DE HORAS */
+.hours-wrapper {
+  display: flex;
+  width: 100%;
+  gap: 30px;
+}
+
+/* COLUMNA */
+.hour-column {
+  flex: 1;
+  background-color: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hour-title {
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 18px;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 10px;
+}
+
+/* CARD */
+.order-card {
+  background-color: #f9fafb;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s ease;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+}
+
+.order-location {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.order-status {
+  font-weight: bold;
+  margin-top: 8px;
+}

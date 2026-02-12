@@ -1,10 +1,10 @@
 import { format } from "date-fns";
 import OrderCard from "../components/OrderCard";
+import "../styles/calendar.css";
 
 function CalendarPage({ orders, onBack }) {
   const now = new Date();
 
-  // Redondear hora actual hacia abajo
   const currentHour = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -14,7 +14,6 @@ function CalendarPage({ orders, onBack }) {
     0
   );
 
-  // Crear arreglo con hora actual + siguientes 2
   const hours = [
     currentHour,
     new Date(currentHour.getTime() + 60 * 60 * 1000),
@@ -22,24 +21,16 @@ function CalendarPage({ orders, onBack }) {
   ];
 
   return (
-    <div style={{ padding: "40px" }}>
-      {/* Botón para regresar */}
-      <button
-        onClick={onBack}
-        style={{
-          marginBottom: "20px",
-          padding: "8px 16px",
-          cursor: "pointer",
-        }}
-      >
+    <div className="calendar-container">
+      <button className="back-button" onClick={onBack}>
         ← Back to Form
       </button>
 
-      {/* Fecha actual */}
-      <h2>{format(new Date(), "MMMM dd, yyyy")}</h2>
+      <h2 className="calendar-date">
+        {format(new Date(), "MMMM dd, yyyy")}
+      </h2>
 
-      {/* Columnas de horas */}
-      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+      <div className="hours-wrapper">
         {hours.map((hour, index) => {
           const hourString = format(hour, "HH:00");
 
@@ -49,20 +40,13 @@ function CalendarPage({ orders, onBack }) {
           });
 
           return (
-            <div
-              key={index}
-              style={{
-                border: "1px solid #ccc",
-                padding: "15px",
-                width: "300px",
-                minHeight: "300px",
-                borderRadius: "8px",
-              }}
-            >
-              <h3>{hourString}</h3>
+            <div key={index} className="hour-column">
+              <div className="hour-title">
+                {hourString} ({filteredOrders.length})
+              </div>
 
               {filteredOrders.length === 0 && (
-                <p style={{ color: "#999" }}>No orders</p>
+                <p style={{ color: "#9ca3af" }}>No orders</p>
               )}
 
               {filteredOrders.map((order, i) => (

@@ -1,30 +1,33 @@
 function OrderCard({ order }) {
   const locationColor =
-    order.location === "Mesa" ? "#003366" : "#66a3ff";
+    order.location === "Mesa" ? "#1d4ed8" : "#93c5fd";
 
   const statusColor = {
-    Fabrication: "red",
-    "on hold": "orange",
-    Finished: "green",
+    Fabrication: "#dc2626",
+    "on hold": "#f59e0b",
+    Finished: "#16a34a",
   };
 
   return (
     <div
-      style={{
-        border: "1px solid black",
-        padding: "10px",
-        marginBottom: "10px",
-      }}
+      className="order-card"
+      style={{ borderLeft: `6px solid ${statusColor[order.status]}` }}
     >
-      <div style={{ color: locationColor, fontWeight: "bold" }}>
+      <div
+        className="order-location"
+        style={{ color: locationColor }}
+      >
         {order.location}
       </div>
 
-      <div>Invoice: {order.invoiceNumber}</div>
-      <div>Company: {order.companyName}</div>
-      <div>Description: {order.productDescription}</div>
+      <div><strong>Invoice:</strong> {order.invoiceNumber}</div>
+      <div><strong>Company:</strong> {order.companyName}</div>
+      <div>{order.productDescription}</div>
 
-      <div style={{ color: statusColor[order.status], fontWeight: "bold" }}>
+      <div
+        className="order-status"
+        style={{ color: statusColor[order.status] }}
+      >
         {order.status}
       </div>
     </div>
