@@ -11,10 +11,14 @@ function App() {
     setShowCalendar(true);
   };
 
+  const handleBack = () => {
+    setShowCalendar(false);
+  };
+
   return (
     <>
       {showCalendar ? (
-        <CalendarPage orders={orders} />
+        <CalendarPage orders={orders} onBack={handleBack} />
       ) : (
         <FormPage onSubmit={handleAddOrder} />
       )}
