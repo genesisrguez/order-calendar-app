@@ -85,3 +85,59 @@ body {
   font-weight: bold;
   margin-top: 8px;
 }
+
+/* HEADER */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #111827;
+}
+
+.calendar-date {
+  margin: 5px 0 0 0;
+  color: #6b7280;
+}
+
+/* HORA ACTUAL DESTACADA */
+.current-hour {
+  background-color: #eff6ff;
+  border-top: 4px solid #2563eb;
+}
+
+/* TEXTO SIN ÓRDENES */
+.no-orders {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.order-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.order-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.order-row {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.order-description {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #374151;
+}

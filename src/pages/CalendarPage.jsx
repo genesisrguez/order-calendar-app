@@ -20,44 +20,61 @@ function CalendarPage({ orders, onBack }) {
     new Date(currentHour.getTime() + 2 * 60 * 60 * 1000),
   ];
 
+  const today = new Date();
+  const formattedDate = format(today, "MMMM dd, yyyy");
+
   return (
-    <div className="calendar-container">
-      <button className="back-button" onClick={onBack}>
-        ← Back to Form
-      </button>
+  <div className="calendar-container">
+    {/* HEADER */}
+    <div className="calendar-header">
+      <div className="header-left">
+        <h1>Orders Calendar</h1>
+        <p className="calendar-date">{formattedDate}</p>
+      </div>
 
-      <h2 className="calendar-date">
-        {format(new Date(), "MMMM dd, yyyy")}
-      </h2>
-
-      <div className="hours-wrapper">
-        {hours.map((hour, index) => {
-          const hourString = format(hour, "HH:00");
-
-          const filteredOrders = orders.filter((order) => {
-            const orderHour = order.deliveryTime.slice(0, 2) + ":00";
-            return orderHour === hourString;
-          });
-
-          return (
-            <div key={index} className="hour-column">
-              <div className="hour-title">
-                {hourString} ({filteredOrders.length})
-              </div>
-
-              {filteredOrders.length === 0 && (
-                <p style={{ color: "#9ca3af" }}>No orders</p>
-              )}
-
-              {filteredOrders.map((order, i) => (
-                <OrderCard key={i} order={order} />
-              ))}
-            </div>
-          );
-        })}
+      <div className="header-right">
+        <button className="back-button" onClick={onBack}>
+          ← Back to Form
+        </button>
       </div>
     </div>
-  );
+
+    <div className="hours-wrapper">
+      {hours.map((hour, index) => {
+        const hourString = format(hour, "HH:00");
+
+        const filteredOrders = orders.filter((order) => {
+          const orderHour = order.deliveryTime.slice(0, 2) + ":00";
+          return orderHour === hourString;
+        });
+
+        const isCurrentHour =
+          format(currentHour, "HH:00") === hourString;
+
+        return (
+          <div
+            key={index}
+            className={`hour-column ${
+              isCurrentHour ? "current-hour" : ""
+            }`}
+          >
+            <div className="hour-title">
+              {hourString} ({filteredOrders.length})
+            </div>
+
+            {filteredOrders.length === 0 && (
+              <p className="no-orders">No orders</p>
+            )}
+
+            {filteredOrders.map((order, i) => (
+              <OrderCard key={i} order={order} />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
 }
 
 export default CalendarPage;
