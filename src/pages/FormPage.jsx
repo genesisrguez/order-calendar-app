@@ -45,6 +45,30 @@ function FormPage({ onSubmit }) {
     });
   };
 
+const generateTimeOptions = () => {
+  const times = [];
+
+  for (let hour = 6; hour <= 18; hour++) {
+    const date = new Date();
+    date.setHours(hour, 0, 0);
+
+    const formatted = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+
+    times.push({
+      value: hour,
+      label: formatted
+    });
+  }
+
+  return times;
+};
+
+const timeOptions = generateTimeOptions();
+
   return (
     <div className="form-container">
       <div className="form-card">
@@ -95,24 +119,18 @@ function FormPage({ onSubmit }) {
             <div className="form-group">
               <label>Delivery Time</label>
               <select
-  name="deliveryTime"
-  value={formData.deliveryTime}
-  onChange={handleChange}
-  required
->
-  <option value="">Select time</option>
+                name="deliveryTime"
+                value={formData.deliveryTime}
+                onChange={handleChange}
+              >
+                <option value="">Select time</option>
 
-  {Array.from({ length: 13 }, (_, i) => {
-    const hour = i + 6;
-    const formatted = hour.toString().padStart(2, "0") + ":00";
-
-    return (
-      <option key={hour} value={formatted}>
-        {formatted}
-      </option>
-    );
-  })}
-</select>
+                {timeOptions.map((time, index) => (
+                  <option key={index} value={time.label}>
+                    {time.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
