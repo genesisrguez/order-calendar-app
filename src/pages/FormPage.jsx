@@ -8,6 +8,7 @@ function FormPage({ onSubmit }) {
     companyName: "",
     jobName: "",
     dateNeeded: "",
+    dateOrdered: "",
     deliveryTime: "",
     deliveryType: "",
     productDescription: "",
@@ -38,10 +39,9 @@ function FormPage({ onSubmit }) {
       jobName: "",
       dateNeeded: "",
       deliveryTime: "",
-      deliveryType: "",
       productDescription: "",
       orderForm: null,
-      status: "",
+      status: ""
     });
   };
 
@@ -78,7 +78,17 @@ function FormPage({ onSubmit }) {
             </div>
 
             <div className="form-group">
-              <label>Date Needed</label>
+              <label>Date Ordered</label>
+              <input
+                type="date"
+                name="dateOrdered"
+                value={formData.dateOrdered}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Date Needed By</label>
               <input type="date" name="dateNeeded" value={formData.dateNeeded} onChange={handleChange} />
             </div>
 
@@ -103,15 +113,6 @@ function FormPage({ onSubmit }) {
     );
   })}
 </select>
-            </div>
-
-            <div className="form-group">
-              <label>Delivery Type</label>
-              <select name="deliveryType" value={formData.deliveryType} onChange={handleChange}>
-                <option value="">Select</option>
-                <option value="outside">Outside</option>
-                <option value="location">Location</option>
-              </select>
             </div>
 
             <div className="form-group">
