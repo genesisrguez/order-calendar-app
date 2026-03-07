@@ -4,23 +4,26 @@ import OrderCard from "../components/OrderCard";
 import "../styles/calendar.css";
 
 function CalendarPage({ orders }) {
+
   const today = new Date();
   const formattedDate = format(today, "MMMM dd, yyyy");
 
-  const currentHour = new Date();
-
-  // 🔹 Generar horas del día (00:00 - 23:00)
+  // 🔹 Generar las 24 horas del día
   const hours = Array.from({ length: 24 }, (_, i) => {
     const date = new Date();
     date.setHours(i, 0, 0, 0);
     return date;
   });
 
+  // 🔹 Hora actual
+  const now = new Date();
+
   // 🔹 Estado del filtro
   const [locationFilter, setLocationFilter] = useState("All");
 
   return (
     <div className="calendar-container">
+
       {/* HEADER */}
       <div className="calendar-header">
         <div className="header-left">
@@ -29,8 +32,9 @@ function CalendarPage({ orders }) {
         </div>
       </div>
 
-      {/* 🔹 TOGGLE FILTER */}
+      {/* FILTER BUTTONS */}
       <div className="filter-container">
+
         <button
           className={locationFilter === "All" ? "active-filter" : ""}
           onClick={() => setLocationFilter("All")}
@@ -51,19 +55,22 @@ function CalendarPage({ orders }) {
         >
           Phoenix
         </button>
+
       </div>
 
-      {/* 🔹 HOURS GRID */}
-      <div className="hours-wrapper">
+      {/* HOURS GRID */}
+      <div className="calendar-hours">
+
         {hours.map((hour, index) => {
+
           const hourString = format(hour, "HH:00");
 
-          // 🔹 FILTRO POR HORA + LOCATION
+          // 🔹 Filtrar órdenes por hora y location
           const filteredOrders = orders.filter((order) => {
+
             if (!order.deliveryTime) return false;
 
-            const orderHour =
-              order.deliveryTime.slice(0, 2) + ":00";
+            const orderHour = order.deliveryTime.slice(0, 2) + ":00";
 
             const matchesHour = orderHour === hourString;
 
@@ -74,8 +81,9 @@ function CalendarPage({ orders }) {
             return matchesHour && matchesLocation;
           });
 
+          // 🔹 Resaltar hora actual
           const isCurrentHour =
-            format(currentHour, "HH:00") === hourString;
+            format(now, "HH:00") === hourString;
 
           return (
             <div
@@ -84,8 +92,9 @@ function CalendarPage({ orders }) {
                 isCurrentHour ? "current-hour" : ""
               }`}
             >
+
               <div className="hour-title">
-                {hourString} ({filteredOrders.length})
+                {format(hour, "h a")} ({filteredOrders.length})
               </div>
 
               {filteredOrders.length === 0 && (
@@ -95,10 +104,13 @@ function CalendarPage({ orders }) {
               {filteredOrders.map((order) => (
                 <OrderCard key={order.id} order={order} />
               ))}
+
             </div>
           );
         })}
+
       </div>
+
     </div>
   );
 }

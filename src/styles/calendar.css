@@ -168,3 +168,9 @@ body {
   color: white;
   border: none;
 }
+
+.calendar-hours {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+}
