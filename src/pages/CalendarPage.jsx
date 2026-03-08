@@ -1,30 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import OrderCard from "../components/OrderCard";
 import "../styles/calendar.css";
 
-function CalendarPage({ orders }) {
+function CalendarPage({ orders = [] }) {
 
   const today = new Date();
   const formattedDate = format(today, "MMMM dd, yyyy");
 
-  // 🔹 Generar las 24 horas del día
-  const hours = Array.from({ length: 24 }, (_, i) => {
-    const date = new Date();
-    date.setHours(i, 0, 0, 0);
-    return date;
+  const [locationFilter, setLocationFilter] = useState("All");
+  const calendarRef = useRef(null);
+
+  // Horas laborales
+  
+  const now = new Date();
+  const currentHour = now.getHours();
+  const nextHour = currentHour + 1;
+
+  const nextHourOrders = orders.filter((order) => {
+    if (!order.deliveryTime) return false;
+
+    const orderHour = parseInt(order.deliveryTime.slice(0, 2));
+    return orderHour === nextHour;
   });
 
-  // 🔹 Hora actual
-  const now = new Date();
+  const upcomingOrders = orders
+  .filter((order) => order.deliveryTime)
+  .sort((a, b) => a.deliveryTime.localeCompare(b.deliveryTime));
 
-  // 🔹 Estado del filtro
-  const [locationFilter, setLocationFilter] = useState("All");
+  const nextDelivery = upcomingOrders.find((order) => {
+    const orderTime = order.deliveryTime;
+    const currentTime = now.toTimeString().slice(0, 5);
+
+    return orderTime >= currentTime;
+  });
+
+  useEffect(() => {
+  if (!calendarRef.current) return;
+
+  const currentHourElement = calendarRef.current.querySelector(".current-hour");
+
+  if (currentHourElement) {
+    currentHourElement.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest"
+    });
+  }
+}, []);
+
+  const startHour = 6;
+  const endHour = 18;
+
+  const hours = [];
+
+  for (let i = startHour; i <= endHour; i++) {
+    const date = new Date();
+    date.setHours(i, 0, 0, 0);
+    hours.push(date);
+  }
+
 
   return (
+
     <div className="calendar-container">
 
-      {/* HEADER */}
       <div className="calendar-header">
         <div className="header-left">
           <h1>Orders Calendar</h1>
@@ -32,7 +72,6 @@ function CalendarPage({ orders }) {
         </div>
       </div>
 
-      {/* FILTER BUTTONS */}
       <div className="filter-container">
 
         <button
@@ -58,14 +97,31 @@ function CalendarPage({ orders }) {
 
       </div>
 
-      {/* HOURS GRID */}
-      <div className="calendar-hours">
+      <div className="next-panel">
+
+  <div className="next-hour">
+    ⚡ Next Hour
+    <p>{nextHourOrders.length} Orders Incoming</p>
+  </div>
+
+  <div className="next-delivery">
+    🚚 Next Delivery
+    {nextDelivery ? (
+      <p>
+        {nextDelivery.deliveryTime} — {nextDelivery.location}
+      </p>
+    ) : (
+      <p>No upcoming deliveries</p>
+    )}
+  </div>
+
+</div>
+      <div className="calendar-hours" ref={calendarRef}>
 
         {hours.map((hour, index) => {
 
           const hourString = format(hour, "HH:00");
 
-          // 🔹 Filtrar órdenes por hora y location
           const filteredOrders = orders.filter((order) => {
 
             if (!order.deliveryTime) return false;
@@ -81,16 +137,13 @@ function CalendarPage({ orders }) {
             return matchesHour && matchesLocation;
           });
 
-          // 🔹 Resaltar hora actual
           const isCurrentHour =
             format(now, "HH:00") === hourString;
 
           return (
             <div
               key={index}
-              className={`hour-column ${
-                isCurrentHour ? "current-hour" : ""
-              }`}
+              className={`hour-column ${isCurrentHour ? "current-hour" : ""}`}
             >
 
               <div className="hour-title">
@@ -107,6 +160,7 @@ function CalendarPage({ orders }) {
 
             </div>
           );
+
         })}
 
       </div>
