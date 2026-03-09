@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 import "../styles/form.css";
 
 function FormPage({ onSubmit }) {
@@ -10,25 +11,93 @@ function FormPage({ onSubmit }) {
     dateNeeded: "",
     dateOrdered: "",
     deliveryTime: "",
-    deliveryType: "",
-    productDescription: "",
-    orderForm: null,
     status: "",
+    productDescription: "",
+    orderForm: null
   });
+
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
-    if (name === "orderForm") {
-      setFormData({ ...formData, orderForm: files[0] });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+    const newValue = files ? files[0] : value;
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+  const newErrors = {};
+  Object.entries(formData).forEach(([key, value]) => {
+    if (!value) newErrors[key] = "This field is required"; // ahora TODOS los campos, incluido orderForm
+  });
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    if (!validateForm()) {
+      setErrorMessage("Please complete all required fields.");
+      return;
+    }
+
+    try {
+      let orderUrl = null;
+
+      if (formData.orderForm) {
+        const fileName = `${Date.now()}-${formData.orderForm.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("order-forms")
+          .upload(fileName, formData.orderForm);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from("order-forms")
+          .getPublicUrl(fileName);
+        orderUrl = data.publicUrl;
+      }
+
+      const { error } = await supabase.from("orders").insert([{
+        location: formData.location,
+        invoice_number: formData.invoiceNumber,
+        company_name: formData.companyName,
+        job_name: formData.jobName,
+        date_ordered: formData.dateOrdered,
+        date_needed_by: formData.dateNeeded,
+        delivery_time: formData.deliveryTime,
+        status: formData.status,
+        description: formData.productDescription,
+        order_url: orderUrl
+      }]);
+
+      if (error) throw error;
+
+      setSuccessMessage("Order created successfully!");
+      setFormData({
+        location: "",
+        invoiceNumber: "",
+        companyName: "",
+        jobName: "",
+        dateNeeded: "",
+        dateOrdered: "",
+        deliveryTime: "",
+        status: "",
+        productDescription: "",
+        orderForm: null
+      });
+
+      if (onSubmit) onSubmit();
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Error saving order.");
+    }
   };
 
   const handleReset = () => {
@@ -38,143 +107,118 @@ function FormPage({ onSubmit }) {
       companyName: "",
       jobName: "",
       dateNeeded: "",
+      dateOrdered: "",
       deliveryTime: "",
+      status: "",
       productDescription: "",
-      orderForm: null,
-      status: ""
+      orderForm: null
     });
+    setErrors({});
+    setErrorMessage("");
+    setSuccessMessage("");
   };
 
-const generateTimeOptions = () => {
-  const times = [];
-
-  for (let hour = 6; hour <= 18; hour++) {
+  const timeOptions = Array.from({ length: 13 }, (_, i) => {
+    const hour = 6 + i;
     const date = new Date();
     date.setHours(hour, 0, 0);
-
     const formatted = date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true
     });
-
-    times.push({
-      value: hour,
-      label: formatted
-    });
-  }
-
-  return times;
-};
-
-const timeOptions = generateTimeOptions();
+    return formatted;
+  });
 
   return (
     <div className="form-container">
       <div className="form-card">
         <h2 className="form-title">Create New Order</h2>
 
+        {successMessage && <div className="success-message">{successMessage}</div>}
+        {errorMessage && <div className="error-banner">{errorMessage}</div>}
+
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
-
             <div className="form-group">
               <label>Location</label>
-              <select name="location" value={formData.location} onChange={handleChange}>
+              <select name="location" value={formData.location} onChange={handleChange} className={errors.location ? "input-error" : ""}>
                 <option value="">Select</option>
                 <option value="Mesa">Mesa</option>
                 <option value="Phoenix">Phoenix</option>
               </select>
+              {errors.location && <p className="error-text">{errors.location}</p>}
             </div>
 
             <div className="form-group">
               <label>Invoice Number</label>
-              <input type="text" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleChange} />
+              <input type="text" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleChange} className={errors.invoiceNumber ? "input-error" : ""}/>
+              {errors.invoiceNumber && <p className="error-text">{errors.invoiceNumber}</p>}
             </div>
 
             <div className="form-group">
               <label>Company Name</label>
-              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} />
+              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className={errors.companyName ? "input-error" : ""}/>
+              {errors.companyName && <p className="error-text">{errors.companyName}</p>}
             </div>
 
             <div className="form-group">
               <label>Job Name</label>
-              <input type="text" name="jobName" value={formData.jobName} onChange={handleChange} />
+              <input type="text" name="jobName" value={formData.jobName} onChange={handleChange} className={errors.jobName ? "input-error" : ""}/>
+              {errors.jobName && <p className="error-text">{errors.jobName}</p>}
             </div>
 
             <div className="form-group">
               <label>Date Ordered</label>
-              <input
-                type="date"
-                name="dateOrdered"
-                value={formData.dateOrdered}
-                onChange={handleChange}
-              />
+              <input type="date" name="dateOrdered" value={formData.dateOrdered} onChange={handleChange} className={errors.dateOrdered ? "input-error" : ""}/>
+              {errors.dateOrdered && <p className="error-text">{errors.dateOrdered}</p>}
             </div>
 
             <div className="form-group">
               <label>Date Needed By</label>
-              <input type="date" name="dateNeeded" value={formData.dateNeeded} onChange={handleChange} />
+              <input type="date" name="dateNeeded" value={formData.dateNeeded} onChange={handleChange} className={errors.dateNeeded ? "input-error" : ""}/>
+              {errors.dateNeeded && <p className="error-text">{errors.dateNeeded}</p>}
             </div>
 
             <div className="form-group">
               <label>Delivery Time</label>
-              <select
-                name="deliveryTime"
-                value={formData.deliveryTime}
-                onChange={handleChange}
-              >
+              <select name="deliveryTime" value={formData.deliveryTime} onChange={handleChange} className={errors.deliveryTime ? "input-error" : ""}>
                 <option value="">Select time</option>
-
-                {timeOptions.map((time, index) => (
-                  <option key={index} value={time.label}>
-                    {time.label}
-                  </option>
-                ))}
+                {timeOptions.map((t, i) => <option key={i} value={t}>{t}</option>)}
               </select>
+              {errors.deliveryTime && <p className="error-text">{errors.deliveryTime}</p>}
             </div>
 
             <div className="form-group">
               <label>Status</label>
-              <select name="status" value={formData.status} onChange={handleChange}>
+              <select name="status" value={formData.status} onChange={handleChange} className={errors.status ? "input-error" : ""}>
                 <option value="">Select</option>
-                <option value="Fabrication">Fabrication</option>
-                <option value="on hold">On hold</option>
-                <option value="Finished">Finished</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="In Production">In Production</option>
+                <option value="Ready">Ready</option>
+                <option value="Out for delivery">Out for delivery</option>
+                <option value="Completed">Completed</option>
               </select>
+              {errors.status && <p className="error-text">{errors.status}</p>}
             </div>
 
             <div className="form-group full-width">
               <label>Product Description</label>
-              <textarea
-                name="productDescription"
-                rows="3"
-                value={formData.productDescription}
-                onChange={handleChange}
-              />
+              <textarea name="productDescription" rows="3" value={formData.productDescription} onChange={handleChange} className={errors.productDescription ? "input-error" : ""}/>
+              {errors.productDescription && <p className="error-text">{errors.productDescription}</p>}
             </div>
 
             <div className="form-group full-width">
               <label>Order Form (jpg, png, pdf)</label>
-              <input
-                type="file"
-                name="orderForm"
-                accept=".jpg,.png,.pdf"
-                onChange={handleChange}
-                className="file-input"
-              />
+              <input type="file" name="orderForm" accept=".jpg,.png,.pdf" onChange={handleChange} className={errors.orderForm ? "input-error" : ""} />
+              {errors.orderForm && <p className="error-text">{errors.orderForm}</p>}
             </div>
-
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={handleReset}>
-              Reset
-            </button>
-            <button type="submit" className="btn-primary">
-              Submit
-            </button>
+            <button type="button" className="btn-secondary" onClick={handleReset}>Reset</button>
+            <button type="submit" className="btn-primary">Submit</button>
           </div>
-
         </form>
       </div>
     </div>

@@ -1,43 +1,50 @@
-import { useState } from "react";
-import DashboardLayout from "./layout/DashboardLayout";
-import FormPage from "./pages/FormPage";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
 import CalendarPage from "./pages/CalendarPage";
+import { useEffect, useState } from "react";
+import { supabase } from "./lib/supabaseClient";
 
 function App() {
-  const [orders, setOrders] = useState([]);
+  const [user, setUser] = useState(null);
 
-  const handleAddOrder = (order, navigate) => {
-    setOrders([...orders, { ...order, id: Date.now() }]);
-    navigate("calendar"); // Cambia automáticamente al calendario
+  useEffect(() => {
+    // Obtener sesión actual v2
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    getSession();
+
+    // Escucha cambios de sesión
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => listener?.subscription.unsubscribe();
+  }, []);
+
+  const ProtectedRoute = ({ children }) => {
+    if (!user) return <Navigate to="/login" replace />;
+    return children;
   };
 
   return (
-    <DashboardLayout
-      renderPage={(active, setActive) => {
-        if (active === "create") {
-          return (
-            <FormPage
-              onSubmit={(order) =>
-                handleAddOrder(order, setActive)
-              }
-            />
-          );
-        }
-
-        if (active === "calendar") {
-          return <CalendarPage orders={orders} />;
-        }
-
-        if (active === "orders") {
-          return (
-            <div style={{ padding: "40px" }}>
-              <h1>Orders List</h1>
-              <p>Coming soon...</p>
-            </div>
-          );
-        }
-      }}
-    />
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/app/calendar" element={<CalendarPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

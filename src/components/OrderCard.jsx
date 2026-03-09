@@ -3,9 +3,11 @@ function OrderCard({ order }) {
     order.location === "Mesa" ? "#1d4ed8" : "#60a5fa";
 
   const statusColor = {
-    Fabrication: "#dc2626",
-    "on hold": "#f59e0b",
-    Finished: "#16a34a",
+    Scheduled: "#5f5f5f",
+    "On hold": "#ff9c12",
+    "In Production": "#dc2626",
+    Ready: "#0342ff",
+    Completed: "#16a34a"
   };
 
   return (
@@ -21,15 +23,19 @@ function OrderCard({ order }) {
       </div>
 
       <div className="order-row">
-        <strong>Invoice:</strong> {order.invoiceNumber}
+        <strong>Invoice:</strong> {order.invoice_number}
       </div>
 
       <div className="order-row">
-        <strong>Company:</strong> {order.companyName}
+        <strong>Company:</strong> {order.company_name}
+      </div>
+
+      <div className="order-row">
+        <strong>Job name:</strong> {order.job_name}
       </div>
 
       <div className="order-description">
-        {order.productDescription}
+        {order.description}
       </div>
 
       <div
