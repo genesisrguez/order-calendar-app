@@ -16,6 +16,7 @@ function CalendarPage() {
   const startHour = 7;
   const endHour = 16;
   const hours = [];
+
   for (let i = startHour; i <= endHour; i++) {
     const date = new Date();
     date.setHours(i, 0, 0, 0);
@@ -24,59 +25,66 @@ function CalendarPage() {
 
   const now = new Date();
 
+  // Simulación de hora (solo para pruebas)
+  //now.setHours(10, 0, 0);
 
-
-  // Filtra las órdenes según la fecha seleccionada y ubicación
+  // Filtra órdenes por fecha y ubicación
   const filteredOrders = orders.filter((order) => {
     if (!order.date_needed_by) return false;
 
-    // Tomamos solo YYYY-MM-DD del campo date_needed_by
     const orderDate = order.date_needed_by.slice(0, 10);
 
     const matchesDate = orderDate === selectedDate;
-    const matchesLocation = locationFilter === "All" || order.location === locationFilter;
+    const matchesLocation =
+      locationFilter === "All" || order.location === locationFilter;
 
     return matchesDate && matchesLocation;
   });
 
-    //Ordenes ASAP
+  // Ordenes ASAP
   const asapOrders = filteredOrders.filter((order) => {
-  if (!order.delivery_time) return false;
+    if (!order.delivery_time) return false;
 
-  const orderHour = parseInt(order.delivery_time.slice(0, 2));
+    const orderHour = parseInt(order.delivery_time.slice(0, 2));
 
-  return orderHour < startHour || orderHour > endHour;
-});
+    return orderHour < startHour || orderHour > endHour;
+  });
 
   // Próxima hora
   const nextHour = now.getHours() + 1;
+
   const nextHourOrders = filteredOrders.filter((order) => {
     if (!order.delivery_time) return false;
+
     const orderHour = parseInt(order.delivery_time.slice(0, 2));
+
     return orderHour === nextHour;
   });
 
-  // Próxima entrega
-  if(!orders) return null;
+  if (!orders) return null;
 
+  // Próxima entrega
   const upcomingOrders = filteredOrders
-  .filter((order) => order.delivery_time)
-  .sort((a, b) => a.delivery_time.localeCompare(b.delivery_time));
+    .filter((order) => order.delivery_time)
+    .sort((a, b) => a.delivery_time.localeCompare(b.delivery_time));
 
   const nextDelivery = upcomingOrders.find((order) => {
     if (!order.delivery_time) return false;
+
     const orderTime = order.delivery_time;
     const currentTime = format(now, "HH:mm");
+
     return orderTime >= currentTime;
   });
 
-  // Fetch de órdenes desde Supabase
+  // Fetch órdenes
   useEffect(() => {
     fetchOrders();
   }, []);
 
   async function fetchOrders() {
     const { data, error } = await supabase.from("orders").select("*");
+
     if (error) {
       console.error("Error loading orders:", error);
     } else {
@@ -85,11 +93,13 @@ function CalendarPage() {
     }
   }
 
-  // Scroll automático al current hour
+  // Scroll automático a la hora actual
   useEffect(() => {
     if (!calendarRef.current) return;
+
     const currentHourElement =
-    calendarRef.current?.querySelector(".current-hour");
+      calendarRef.current?.querySelector(".current-hour");
+
     if (currentHourElement) {
       currentHourElement.scrollIntoView({
         behavior: "smooth",
@@ -99,23 +109,25 @@ function CalendarPage() {
     }
   }, [filteredOrders, selectedDate]);
 
-  if(loadingOrders) {
+  if (loadingOrders) {
     return (
-        <div className="calendar-loading">
+      <div className="calendar-loading">
         <div className="calendar-spinner"></div>
         <p>Loading calendar...</p>
       </div>
     );
-    }
+  }
 
   return (
     <div className="calendar-container">
       <div className="calendar-header">
         <div className="header-left">
           <h1>Orders Calendar</h1>
+
           <p className="calendar-date">
             {format(new Date(selectedDate), "MM/dd/yyyy")}
           </p>
+
           <input
             type="date"
             lang="en-US"
@@ -156,11 +168,35 @@ function CalendarPage() {
       </div>
 
       <div className="calendar-hours" ref={calendarRef}>
+        {hours.map((hour, index) => {
 
-         {/* ASAP COLUMN */}
+  const hourString = format(hour, "HH:00");
+
+  const hourOrders = filteredOrders.filter((order) => {
+    if (!order.delivery_time) return false;
+
+    const orderHour = order.delivery_time.slice(0, 2) + ":00";
+    return orderHour === hourString;
+  });
+
+  const orders00 = hourOrders.filter((order) =>
+    order.delivery_time.includes(":00")
+  );
+
+  const orders30 = hourOrders.filter((order) =>
+    order.delivery_time.includes(":30")
+  );
+
+  const isCurrentHour = format(now, "HH:00") === hourString;
+
+  const showASAP = isCurrentHour;
+
+  return (
+    <>
+      {showASAP && (
         <div className="hour-column asap-column">
-          <div className="asap-header">
-            ⚡ ASAP
+          <div className="hour-title asap-title">
+            ⚡ ASAP ({asapOrders.length})
           </div>
 
           {asapOrders.length === 0 && (
@@ -171,52 +207,33 @@ function CalendarPage() {
             <OrderCard key={order.id} order={order} />
           ))}
         </div>
+      )}
 
-        {hours.map((hour, index) => {
-          const hourString = format(hour, "HH:00");
+      <div
+        key={index}
+        className={`hour-column ${isCurrentHour ? "current-hour" : ""}`}
+      >
+        <div className="hour-title">
+          {format(hour, "h a")} ({hourOrders.length})
+        </div>
 
-          const hourOrders = filteredOrders.filter((order) => {
-            if (!order.delivery_time) return false;
-            const orderHour = order.delivery_time.slice(0, 2) + ":00";
-            return orderHour === hourString;
-          });
+        <div className="hour-slot slot-00">
+          {orders00.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
 
-          const orders00 = hourOrders.filter((order) =>
-            order.delivery_time.includes(":00")
-          );
+        {orders30.length > 0 && <div className="half-hour-divider"></div>}
 
-          const orders30 = hourOrders.filter((order) =>
-            order.delivery_time.includes(":30")
-          );
-
-          const isCurrentHour = format(now, "HH:00") === hourString;
-
-
-          return (
-            <div
-              key={index}
-              className={`hour-column ${isCurrentHour ? "current-hour" : ""}`}
-            >
-              <div className="hour-title">
-                {format(hour, "h a")} ({hourOrders.length})
-              </div>
-
-              <div className="hour-slot slot-00">
-                {orders00.map((order) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
-              </div>
-
-              {orders30.length > 0 && <div className="half-hour-divider"></div>}
-
-              <div className="hour-slot slot-30">
-                {orders30.map((order) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        <div className="hour-slot slot-30">
+          {orders30.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+})}
       </div>
     </div>
   );
