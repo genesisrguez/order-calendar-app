@@ -24,7 +24,7 @@ function LoginPage() {
     }
 
     if (data.session?.user) {
-      navigate("/app"); // Redirige al dashboard
+      navigate("/dashboard"); // Redirige al dashboard
     }
   };
 

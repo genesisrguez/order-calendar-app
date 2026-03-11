@@ -10,12 +10,13 @@
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
+  overflow: hidden;
   background: #f9fafb;
 }
 
 /* Sidebar */
 .sidebar {
-  background: #111827;
+  background: #011d58;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -72,7 +73,7 @@
 
 .sidebar-menu button.active,
 .sidebar-menu button:hover {
-  background: #374151;
+  background: #1b0fff;
 }
 
 .sidebar-bottom {
@@ -83,13 +84,14 @@
   padding: 0.8rem 1rem;
   border-radius: 8px;
   border: none;
-  background: #dc2626;
+  background: #2563eb;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .logout-button:hover {
-  background: #b91c1c;
+  background: #1d4ed8;
+
 }
 
 /* Contenido principal */
@@ -97,6 +99,8 @@
   margin-left: 250px;
   flex: 1;
   padding: 2rem;
+  height: 100vh;
+  overflow-y: auto;
   transition: margin-left 0.3s ease;
 }
 

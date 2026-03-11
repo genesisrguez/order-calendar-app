@@ -1,12 +1,10 @@
 .form-container {
   width: 100%;
-  min-height: 100vh;
   padding: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
   background: #f9fafb;
-  overflow: hidden; /* evita scroll vertical */
 }
 
 .form-card {
@@ -24,7 +22,7 @@
   font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: #111827;
+  color: #061049;
 }
 
 /* Dos campos por fila */

@@ -10,6 +10,7 @@ export default function Sidebar({ activePage, setActivePage }) {
   return (
     <div className="sidebar">
       <div className="sidebar-menu">
+        <h1>JSM Calendar</h1>
         <button
           className={activePage === "form" ? "active" : ""}
           onClick={() => setActivePage("form")}

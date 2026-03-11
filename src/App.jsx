@@ -7,16 +7,17 @@ import { supabase } from "./lib/supabaseClient";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener sesión actual v2
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
+      setLoading(false);
     };
+
     getSession();
 
-    // Escucha cambios de sesión
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -24,6 +25,9 @@ function App() {
     return () => listener?.subscription.unsubscribe();
   }, []);
 
+  if (loading) {
+    return  <div>Loading...</div>;
+  }
   const ProtectedRoute = ({ children }) => {
     if (!user) return <Navigate to="/login" replace />;
     return children;
@@ -32,17 +36,26 @@ function App() {
   return (
     <Router>
       <Routes>
+
+        {/* login */}
         <Route path="/login" element={<LoginPage />} />
+
+        {/* dashboard protegido */}
         <Route
-          path="/app"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardPage />
             </ProtectedRoute>
           }
         />
-        <Route path="/app/calendar" element={<CalendarPage />} />
+
+        {/* calendario público */}
+        <Route path="/calendar" element={<CalendarPage />} />
+
+        {/* redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />
+
       </Routes>
     </Router>
   );

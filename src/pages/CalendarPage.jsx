@@ -9,11 +9,12 @@ function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(format(today, "yyyy-MM-dd"));
   const [locationFilter, setLocationFilter] = useState("All");
   const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const calendarRef = useRef(null);
 
   // Horas del calendario
-  const startHour = 6;
-  const endHour = 18;
+  const startHour = 7;
+  const endHour = 16;
   const hours = [];
   for (let i = startHour; i <= endHour; i++) {
     const date = new Date();
@@ -45,9 +46,11 @@ function CalendarPage() {
   });
 
   // Próxima entrega
+  if(!orders) return null;
+
   const upcomingOrders = filteredOrders
-    .filter((order) => order.delivery_time)
-    .sort((a, b) => order.delivery_time.localeCompare(b.delivery_time));
+  .filter((order) => order.delivery_time)
+  .sort((a, b) => a.delivery_time.localeCompare(b.delivery_time));
 
   const nextDelivery = upcomingOrders.find((order) => {
     if (!order.delivery_time) return false;
@@ -66,7 +69,8 @@ function CalendarPage() {
     if (error) {
       console.error("Error loading orders:", error);
     } else {
-      setOrders(data);
+      setOrders(data || []);
+      setLoadingOrders(false);
     }
   }
 
@@ -82,6 +86,15 @@ function CalendarPage() {
     }
   }, [filteredOrders, selectedDate]);
 
+  if(loadingOrders) {
+    return (
+        <div className="calendar-loading">
+        <div className="calendar-spinner"></div>
+        <p>Loading calendar...</p>
+      </div>
+    );
+    }
+    
   return (
     <div className="calendar-container">
       <div className="calendar-header">
