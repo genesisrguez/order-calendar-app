@@ -242,3 +242,24 @@ font-weight:400;
   border-radius: 6px;
   margin-bottom: 6px;
 }
+
+
+.hour-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slot-00 {
+  padding-bottom: 6px;
+}
+
+.slot-30 {
+  padding-top: 6px;
+}
+
+.half-hour-divider {
+  height: 1px;
+  background: #ff1212;
+  margin: 6px 0;
+}

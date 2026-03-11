@@ -43,12 +43,9 @@ function CalendarPage() {
   const asapOrders = filteredOrders.filter((order) => {
   if (!order.delivery_time) return false;
 
-  const orderTime = new Date(`1970-01-01T${order.delivery_time}`);
-  const currentTime = new Date();
+  const orderHour = parseInt(order.delivery_time.slice(0, 2));
 
-  const diffMinutes = (orderTime - currentTime) / 60000;
-
-  return diffMinutes <= 30 && diffMinutes >= -30;
+  return orderHour < startHour || orderHour > endHour;
 });
 
   // Próxima hora
@@ -184,10 +181,16 @@ function CalendarPage() {
             return orderHour === hourString;
           });
 
-          const currentHour = now.getHours();
-          const isCurrentHour = currentHour >= startHour && currentHour <= endHour
-            ? format(now, "HH:00") === hourString
-            : false;
+          const orders00 = hourOrders.filter((order) =>
+            order.delivery_time.includes(":00")
+          );
+
+          const orders30 = hourOrders.filter((order) =>
+            order.delivery_time.includes(":30")
+          );
+
+          const isCurrentHour = format(now, "HH:00") === hourString;
+
 
           return (
             <div
@@ -198,11 +201,19 @@ function CalendarPage() {
                 {format(hour, "h a")} ({hourOrders.length})
               </div>
 
-              {hourOrders.length === 0 && <p className="no-orders">No orders</p>}
+              <div className="hour-slot slot-00">
+                {orders00.map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+              </div>
 
-              {hourOrders.map((order) => (
-                <OrderCard key={order.id} order={order} />
-              ))}
+              {orders30.length > 0 && <div className="half-hour-divider"></div>}
+
+              <div className="hour-slot slot-30">
+                {orders30.map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+              </div>
             </div>
           );
         })}
