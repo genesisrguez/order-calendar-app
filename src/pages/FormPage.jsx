@@ -63,6 +63,17 @@ function FormPage({ onSubmit }) {
         orderUrl = data.publicUrl;
       }
 
+      let finalDeliveryTime = formData.deliveryTime;
+
+      if (formData.deliveryTime === "ASAP") {
+        const now = new Date();
+
+        finalDeliveryTime =
+          now.getHours().toString().padStart(2, "0") +
+          ":" +
+          now.getMinutes().toString().padStart(2, "0");
+      }
+
       const { error } = await supabase.from("orders").insert([{
         location: formData.location,
         invoice_number: formData.invoiceNumber,
@@ -70,7 +81,7 @@ function FormPage({ onSubmit }) {
         job_name: formData.jobName,
         date_ordered: formData.dateOrdered,
         date_needed_by: formData.dateNeeded,
-        delivery_time: formData.deliveryTime,
+        delivery_time: finalDeliveryTime,
         status: formData.status,
         description: formData.productDescription,
         order_url: orderUrl
@@ -118,17 +129,22 @@ function FormPage({ onSubmit }) {
     setSuccessMessage("");
   };
 
-  const timeOptions = Array.from({ length: 13 }, (_, i) => {
-    const hour = 6 + i;
+  const timeOptions = [
+  "ASAP",
+  ...Array.from({ length: 20 }, (_, i) => {
+    const hour = 7 + Math.floor(i / 2);
+    const minutes = i % 2 === 0 ? 0 : 30;
+
     const date = new Date();
-    date.setHours(hour, 0, 0);
-    const formatted = date.toLocaleTimeString("en-US", {
+    date.setHours(hour, minutes, 0);
+
+    return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true
     });
-    return formatted;
-  });
+  })
+];
 
   return (
     <div className="form-container">
@@ -184,7 +200,11 @@ function FormPage({ onSubmit }) {
               <label>Delivery Time</label>
               <select name="deliveryTime" value={formData.deliveryTime} onChange={handleChange} className={errors.deliveryTime ? "input-error" : ""}>
                 <option value="">Select time</option>
-                {timeOptions.map((t, i) => <option key={i} value={t}>{t}</option>)}
+                {timeOptions.map((t, i) => (
+                  <option key={i} value={t}>
+                    {t === "ASAP" ? "⚡ ASAP" : t}
+                  </option>
+                ))}
               </select>
               {errors.deliveryTime && <p className="error-text">{errors.deliveryTime}</p>}
             </div>

@@ -24,6 +24,8 @@ function CalendarPage() {
 
   const now = new Date();
 
+
+
   // Filtra las órdenes según la fecha seleccionada y ubicación
   const filteredOrders = orders.filter((order) => {
     if (!order.date_needed_by) return false;
@@ -36,6 +38,18 @@ function CalendarPage() {
 
     return matchesDate && matchesLocation;
   });
+
+    //Ordenes ASAP
+  const asapOrders = filteredOrders.filter((order) => {
+  if (!order.delivery_time) return false;
+
+  const orderTime = new Date(`1970-01-01T${order.delivery_time}`);
+  const currentTime = new Date();
+
+  const diffMinutes = (orderTime - currentTime) / 60000;
+
+  return diffMinutes <= 30 && diffMinutes >= -30;
+});
 
   // Próxima hora
   const nextHour = now.getHours() + 1;
@@ -77,10 +91,12 @@ function CalendarPage() {
   // Scroll automático al current hour
   useEffect(() => {
     if (!calendarRef.current) return;
-    const currentHourElement = calendarRef.current.querySelector(".current-hour");
+    const currentHourElement =
+    calendarRef.current?.querySelector(".current-hour");
     if (currentHourElement) {
       currentHourElement.scrollIntoView({
         behavior: "smooth",
+        inline: "center",
         block: "nearest",
       });
     }
@@ -94,14 +110,18 @@ function CalendarPage() {
       </div>
     );
     }
-    
+
   return (
     <div className="calendar-container">
       <div className="calendar-header">
         <div className="header-left">
           <h1>Orders Calendar</h1>
+          <p className="calendar-date">
+            {format(new Date(selectedDate), "MM/dd/yyyy")}
+          </p>
           <input
             type="date"
+            lang="en-US"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
           />
@@ -139,6 +159,22 @@ function CalendarPage() {
       </div>
 
       <div className="calendar-hours" ref={calendarRef}>
+
+         {/* ASAP COLUMN */}
+        <div className="hour-column asap-column">
+          <div className="asap-header">
+            ⚡ ASAP
+          </div>
+
+          {asapOrders.length === 0 && (
+            <p className="no-orders">No urgent orders</p>
+          )}
+
+          {asapOrders.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
+
         {hours.map((hour, index) => {
           const hourString = format(hour, "HH:00");
 
@@ -148,7 +184,10 @@ function CalendarPage() {
             return orderHour === hourString;
           });
 
-          const isCurrentHour = format(now, "HH:00") === hourString;
+          const currentHour = now.getHours();
+          const isCurrentHour = currentHour >= startHour && currentHour <= endHour
+            ? format(now, "HH:00") === hourString
+            : false;
 
           return (
             <div
