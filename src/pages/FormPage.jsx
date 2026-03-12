@@ -19,6 +19,7 @@ function FormPage({ onSubmit }) {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -37,44 +38,56 @@ function FormPage({ onSubmit }) {
 };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSuccessMessage("");
-    setErrorMessage("");
+  e.preventDefault();
 
-    if (!validateForm()) {
-      setErrorMessage("Please complete all required fields.");
-      return;
+  if (submitting) return;
+
+  setSuccessMessage("");
+  setErrorMessage("");
+
+  if (!validateForm()) {
+    setErrorMessage("Please complete all required fields.");
+    return;
+  }
+
+  setSubmitting(true);
+
+  try {
+
+    let orderUrl = null;
+
+    if (formData.orderForm) {
+
+      const fileName = `${Date.now()}-${formData.orderForm.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("order-forms")
+        .upload(fileName, formData.orderForm);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("order-forms")
+        .getPublicUrl(fileName);
+
+      orderUrl = data.publicUrl;
     }
 
-    try {
-      let orderUrl = null;
+    let finalDeliveryTime = formData.deliveryTime;
 
-      if (formData.orderForm) {
-        const fileName = `${Date.now()}-${formData.orderForm.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("order-forms")
-          .upload(fileName, formData.orderForm);
+    if (formData.deliveryTime === "ASAP") {
 
-        if (uploadError) throw uploadError;
+      const now = new Date();
 
-        const { data } = supabase.storage
-          .from("order-forms")
-          .getPublicUrl(fileName);
-        orderUrl = data.publicUrl;
-      }
+      finalDeliveryTime =
+        now.getHours().toString().padStart(2, "0") +
+        ":" +
+        now.getMinutes().toString().padStart(2, "0");
+    }
 
-      let finalDeliveryTime = formData.deliveryTime;
-
-      if (formData.deliveryTime === "ASAP") {
-        const now = new Date();
-
-        finalDeliveryTime =
-          now.getHours().toString().padStart(2, "0") +
-          ":" +
-          now.getMinutes().toString().padStart(2, "0");
-      }
-
-      const { error } = await supabase.from("orders").insert([{
+    const { error } = await supabase
+      .from("orders")
+      .insert([{
         location: formData.location,
         invoice_number: formData.invoiceNumber,
         company_name: formData.companyName,
@@ -87,29 +100,38 @@ function FormPage({ onSubmit }) {
         order_url: orderUrl
       }]);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      setSuccessMessage("Order created successfully!");
-      setFormData({
-        location: "",
-        invoiceNumber: "",
-        companyName: "",
-        jobName: "",
-        dateNeeded: "",
-        dateOrdered: "",
-        deliveryTime: "",
-        status: "",
-        productDescription: "",
-        orderForm: null
-      });
+    setSuccessMessage("Order created successfully!");
 
-      if (onSubmit) onSubmit();
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Error saving order.");
-    }
-  };
+    setFormData({
+      location: "",
+      invoiceNumber: "",
+      companyName: "",
+      jobName: "",
+      dateNeeded: "",
+      dateOrdered: "",
+      deliveryTime: "",
+      status: "",
+      productDescription: "",
+      orderForm: null
+    });
+
+    if (onSubmit) onSubmit();
+
+    setTimeout(() => setSuccessMessage(""), 3000);
+
+  } catch (err) {
+
+    console.error(err);
+    setErrorMessage("Error saving order.");
+
+  } finally {
+
+    setSubmitting(false);
+
+  }
+};
 
   const handleReset = () => {
     setFormData({
@@ -237,7 +259,9 @@ function FormPage({ onSubmit }) {
 
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={handleReset}>Reset</button>
-            <button type="submit" className="btn-primary">Submit</button>
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? "Submitting..." : "Submit"}
+            </button>
           </div>
         </form>
       </div>

@@ -82,6 +82,25 @@ function CalendarPage() {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+
+  const channel = supabase
+    .channel("orders-changes")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "orders" },
+      (payload) => {
+        fetchOrders();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+
+}, []);
+
   async function fetchOrders() {
     const { data, error } = await supabase.from("orders").select("*");
 
@@ -180,12 +199,12 @@ function CalendarPage() {
   });
 
   const orders00 = hourOrders.filter((order) =>
-    order.delivery_time.includes(":00")
-  );
+  order.delivery_time.slice(3,5) === "00"
+);
 
-  const orders30 = hourOrders.filter((order) =>
-    order.delivery_time.includes(":30")
-  );
+const orders30 = hourOrders.filter((order) =>
+  order.delivery_time.slice(3,5) === "30"
+);
 
   const isCurrentHour = format(now, "HH:00") === hourString;
 
