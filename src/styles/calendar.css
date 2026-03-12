@@ -53,11 +53,16 @@ body {
 /* COLUMNA */
 
 .hour-column{
-min-width:220px;
+min-width:260px;
+max-width: 260px;
+width: 260px;
+display: flex;
+flex-direction: column;
 background:white;
 border-radius:12px;
 padding:12px;
 box-shadow:0 2px 8px rgba(0,0,0,0.05);
+flex: 0 0 260px;
 }
 
 .hour-title {
@@ -131,6 +136,8 @@ box-shadow:0 2px 8px rgba(0,0,0,0.05);
   margin-bottom: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease-in-out;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .order-card:hover {
@@ -172,8 +179,18 @@ box-shadow:0 2px 8px rgba(0,0,0,0.05);
 .calendar-hours{
 display:flex;
 gap:16px;
-overflow-x:auto;
-padding:10px 0;
+min-width: max-content;
+}
+
+.calendar-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+}
+
+.calendar-scroll-wrapper:active{
+  cursor:grabbing;
 }
 
 .next-panel{

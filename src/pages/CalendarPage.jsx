@@ -11,6 +11,7 @@ function CalendarPage() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const calendarRef = useRef(null);
+  const scrollRef = useRef(null);
 
   // Horas del calendario
   const startHour = 7;
@@ -26,7 +27,7 @@ function CalendarPage() {
   const now = new Date();
 
   // Simulación de hora (solo para pruebas)
-  //now.setHours(10, 0, 0);
+  now.setHours(10, 0, 0);
 
   // Filtra órdenes por fecha y ubicación
   const filteredOrders = orders.filter((order) => {
@@ -178,7 +179,7 @@ function CalendarPage() {
           🚚 Next Delivery
           {nextDelivery ? (
             <p>
-              {nextDelivery.delivery_time} — {nextDelivery.location}
+               {format(new Date(`1970-01-01T${nextDelivery.delivery_time}`), "h:mm a")} — {nextDelivery.location}
             </p>
           ) : (
             <p>No upcoming deliveries</p>
@@ -186,76 +187,104 @@ function CalendarPage() {
         </div>
       </div>
 
-      <div className="calendar-hours" ref={calendarRef}>
-        {hours.map((hour, index) => {
+<div
+  className="calendar-scroll-wrapper"
+  ref={scrollRef}
+  onMouseDown={(e) => {
+    const slider = scrollRef.current;
+    slider.isDown = true;
+    slider.startX = e.pageX - slider.offsetLeft;
+    slider.scrollLeftStart = slider.scrollLeft;
+  }}
+  onMouseLeave={() => {
+    scrollRef.current.isDown = false;
+  }}
+  onMouseUp={() => {
+    scrollRef.current.isDown = false;
+  }}
+  onMouseMove={(e) => {
+    const slider = scrollRef.current;
+    if (!slider.isDown) return;
 
-  const hourString = format(hour, "HH:00");
+    e.preventDefault();
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - slider.startX) * 1.5;
+    slider.scrollLeft = slider.scrollLeftStart - walk;
+  }}
+>
+  <div className="calendar-hours" ref={calendarRef}>
+    {hours.map((hour, index) => {
 
-  const hourOrders = filteredOrders.filter((order) => {
-    if (!order.delivery_time) return false;
+      const hourString = format(hour, "HH:00");
 
-    const orderHour = order.delivery_time.slice(0, 2) + ":00";
-    return orderHour === hourString;
-  });
+      const hourOrders = filteredOrders.filter((order) => {
+        if (!order.delivery_time) return false;
 
-  const orders00 = hourOrders.filter((order) =>
-  order.delivery_time.slice(3,5) === "00"
-);
+        const orderHour = order.delivery_time.slice(0, 2) + ":00";
+        return orderHour === hourString;
+      });
 
-const orders30 = hourOrders.filter((order) =>
-  order.delivery_time.slice(3,5) === "30"
-);
+      const orders00 = hourOrders.filter(
+        (order) => order.delivery_time.slice(3,5) === "00"
+      );
 
-  const isCurrentHour = format(now, "HH:00") === hourString;
+      const orders30 = hourOrders.filter(
+        (order) => order.delivery_time.slice(3,5) === "30"
+      );
 
-  const showASAP = isCurrentHour;
+      const isCurrentHour = format(now, "HH:00") === hourString;
 
-  return (
-    <>
-      {showASAP && (
-        <div className="hour-column asap-column">
-          <div className="hour-title asap-title">
-            ⚡ ASAP ({asapOrders.length})
-          </div>
+      const showASAP = isCurrentHour;
 
-          {asapOrders.length === 0 && (
-            <p className="no-orders">No urgent orders</p>
+      return (
+        <div key={index} style={{ display: "flex", gap: "16px" }}>
+
+          {showASAP && (
+            <div className="hour-column asap-column">
+              <div className="hour-title asap-title">
+                ⚡ ASAP ({asapOrders.length})
+              </div>
+
+              {asapOrders.length === 0 && (
+                <p className="no-orders">No urgent orders</p>
+              )}
+
+              {asapOrders.map((order) => (
+                <OrderCard key={order.id} order={order} />
+              ))}
+            </div>
           )}
 
-          {asapOrders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
-      )}
+          <div className={`hour-column ${isCurrentHour ? "current-hour" : ""}`}>
+            <div className="hour-title">
+              {format(hour, "h a")} ({hourOrders.length})
+            </div>
 
-      <div
-        key={index}
-        className={`hour-column ${isCurrentHour ? "current-hour" : ""}`}
-      >
-        <div className="hour-title">
-          {format(hour, "h a")} ({hourOrders.length})
-        </div>
+            <div className="hour-slot slot-00">
+              {orders00.map((order) => (
+                <OrderCard key={order.id} order={order} />
+              ))}
+            </div>
 
-        <div className="hour-slot slot-00">
-          {orders00.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
+            {orders30.length > 0 && (
+              <div className="half-hour-divider"></div>
+            )}
 
-        {orders30.length > 0 && <div className="half-hour-divider"></div>}
+            <div className="hour-slot slot-30">
+              {orders30.map((order) => (
+                <OrderCard key={order.id} order={order} />
+              ))}
+            </div>
 
-        <div className="hour-slot slot-30">
-          {orders30.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
+          </div>
+
         </div>
-      </div>
-    </>
+      );
+    })}
+  </div>
+</div>
+
+</div>
   );
-})}
-      </div>
-    </div>
-  );
-}
-
+}  
 export default CalendarPage;
