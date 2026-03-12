@@ -83,18 +83,31 @@ function CalendarPage() {
     fetchOrders();
   }, []);
 
-  useEffect(() => {
+ useEffect(() => {
 
   const channel = supabase
-    .channel("orders-changes")
+    .channel("orders-channel")
     .on(
       "postgres_changes",
-      { event: "INSERT", schema: "public", table: "orders" },
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "orders",
+      },
       (payload) => {
-        fetchOrders();
+
+        console.log("Realtime order received:", payload);
+
+        setOrders((prevOrders) => [
+          payload.new,
+          ...prevOrders
+        ]);
+
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Realtime status:", status);
+    });
 
   return () => {
     supabase.removeChannel(channel);
